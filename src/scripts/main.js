@@ -84,3 +84,52 @@ document.addEventListener('keydown', (e) => {
 
   handleMove(direction);
 });
+
+// MOBILA
+
+let touchStartX = 0;
+let touchStartY = 0;
+const gameTable = document.querySelector('.game-field');
+
+gameTable.addEventListener(
+  'touchstart',
+  (e) => {
+    e.preventDefault();
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  },
+  { passive: false },
+);
+
+gameTable.addEventListener('touchend', (e) => {
+  e.preventDefault();
+
+  const touchEndX = e.changedTouches[0].clientX;
+  const touchEndY = e.changedTouches[0].clientY;
+
+  handleSwipe(touchEndX, touchEndY);
+});
+
+function handleSwipe(endX, endY) {
+  const deltaX = endX - touchStartX;
+  const deltaY = endY - touchStartY;
+  const swipeThreshold = 50; // min px swipe
+
+  // hor or ver swipe was
+  if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    if (deltaX > swipeThreshold) {
+      game.move('Right');
+    } else if (deltaX < -swipeThreshold) {
+      game.move('Left');
+    }
+  } else {
+    if (deltaY > swipeThreshold) {
+      game.move('Down');
+    } else if (deltaY < -swipeThreshold) {
+      game.move('Up');
+    }
+  }
+
+  render();
+  updateUi();
+}
