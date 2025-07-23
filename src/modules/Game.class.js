@@ -63,6 +63,10 @@ export default class Game {
       if (i + 1 < slidRow.length && slidRow[i] === slidRow[i + 1]) {
         const mergedValue = slidRow[i] * 2;
 
+        if (mergedValue === 2048) {
+          this.status = 'win';
+        }
+
         mergedRow.push(mergedValue);
         this.score += mergedValue;
 
@@ -133,7 +137,7 @@ export default class Game {
   }
 
   move(direction) {
-    if (this.status !== 'playing') {
+    if (this.status === 'game over') {
       return false;
     }
 

@@ -42,7 +42,7 @@ const updateUi = () => {
 };
 
 const handleMove = (direction) => {
-  if (game.getStatus() !== 'playing') {
+  if (game.getStatus() === 'game over') {
     return;
   }
 
@@ -85,6 +85,12 @@ document.addEventListener('keydown', (e) => {
   handleMove(direction);
 });
 
+const continueButton = winMessage.querySelector('.keep-playing');
+
+continueButton.addEventListener('click', () => {
+  winMessage.classList.add('hidden');
+});
+
 // MOBILA
 
 let touchStartX = 0;
@@ -113,23 +119,19 @@ gameTable.addEventListener('touchend', (e) => {
 function handleSwipe(endX, endY) {
   const deltaX = endX - touchStartX;
   const deltaY = endY - touchStartY;
-  const swipeThreshold = 50; // min px swipe
+  const swipeThreshold = 50;
 
-  // hor or ver swipe was
   if (Math.abs(deltaX) > Math.abs(deltaY)) {
     if (deltaX > swipeThreshold) {
-      game.move('Right');
+      handleMove('Right');
     } else if (deltaX < -swipeThreshold) {
-      game.move('Left');
+      handleMove('Left');
     }
   } else {
     if (deltaY > swipeThreshold) {
-      game.move('Down');
+      handleMove('Down');
     } else if (deltaY < -swipeThreshold) {
-      game.move('Up');
+      handleMove('Up');
     }
   }
-
-  render();
-  updateUi();
 }
