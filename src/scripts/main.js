@@ -88,6 +88,7 @@ document.addEventListener('keydown', (e) => {
 const continueButton = winMessage.querySelector('.keep-playing');
 
 continueButton.addEventListener('click', () => {
+  game.continuePlaying();
   winMessage.classList.add('hidden');
 });
 

@@ -230,4 +230,10 @@ export default class Game {
     this._spawnNewTile();
     this._spawnNewTile();
   }
+
+  continuePlaying() {
+    if (this.status === 'win') {
+      this.status = 'playing';
+    }
+  }
 }
