@@ -1,99 +1,103 @@
 'use strict';
 
-/**
- * This class represents the game.
- * Now it has a basic structure, that is needed for testing.
- * Feel free to add more props and methods if needed.
- */
 export default class Game {
-  /**
-   * Creates a new game instance.
-   *
-   * @param {number[][]} initialState
-   * The initial state of the board.
-   * @default
-   * [[0, 0, 0, 0],
-   *  [0, 0, 0, 0],
-   *  [0, 0, 0, 0],
-   *  [0, 0, 0, 0]]
-   *
-   * If passed, the board will be initialized with the provided
-   * initial state.
-   */
-  constructor(initialState) {
-    this.score = 0;
-    this.status = 'idle'; // One of: 'idle', 'playing', 'win', 'lose'
+  static WINNING_TILE = 2048;
 
-    this.board = initialState || [
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-    ];
+  static Status = {
+    Idle: 'idle',
+    Playing: 'playing',
+    Win: 'win',
+    GameOver: 'game over',
+  };
+
+  static Direction = {
+    Up: 'Up',
+    Down: 'Down',
+    Left: 'Left',
+    Right: 'Right',
+  };
+
+  constructor(size = 4) {
+    this.size = size;
+    this._score = 0;
+    this._moves = 0;
+    this._status = Game.Status.Idle;
+    this._board = this._createEmptyBoard();
+  }
+
+  get score() {
+    return this._score;
+  }
+
+  get state() {
+    return this._board;
+  }
+
+  get status() {
+    return this._status;
+  }
+
+  get moves() {
+    return this._moves;
+  }
+
+  _createEmptyBoard() {
+    return Array.from({ length: this.size }, () => Array(this.size).fill(0));
   }
 
   _spawnNewTile() {
-    const zeroPos = [];
+    const emptyCells = [];
 
-    for (let row = 0; row < this.board.length; row++) {
-      for (let col = 0; col < this.board[row].length; col++) {
-        if (this.board[row][col] === 0) {
-          zeroPos.push({ rowIndex: row, colIndex: col });
+    for (let i = 0; i < this.size; i++) {
+      for (let j = 0; j < this.size; j++) {
+        if (this._board[i][j] === 0) {
+          emptyCells.push({ row: i, col: j });
         }
       }
     }
 
-    if (zeroPos.length === 0) {
-      return;
+    if (emptyCells.length > 0) {
+      const randomCell =
+        emptyCells[Math.floor(Math.random() * emptyCells.length)];
+
+      this._board[randomCell.row][randomCell.col] = Math.random() < 0.9 ? 2 : 4;
     }
-
-    const randomIndex = Math.floor(Math.random() * zeroPos.length);
-
-    const randomCell = zeroPos[randomIndex];
-    const startValue = Math.random() < 0.1 ? 4 : 2;
-
-    this.board[randomCell.rowIndex][randomCell.colIndex] = startValue;
   }
 
   _processRow(row) {
-    const slidRow = row.filter((cell) => cell !== 0);
-    const mergedRow = [];
+    const slid = row.filter((val) => val);
+    const merged = [];
 
-    for (let i = 0; i < slidRow.length; i++) {
-      if (i + 1 < slidRow.length && slidRow[i] === slidRow[i + 1]) {
-        const mergedValue = slidRow[i] * 2;
+    for (let i = 0; i < slid.length; i++) {
+      if (i + 1 < slid.length && slid[i] === slid[i + 1]) {
+        const mergedValue = slid[i] * 2;
 
-        if (mergedValue === 2048) {
-          this.status = 'win';
+        merged.push(mergedValue);
+        this._score += mergedValue;
+
+        if (mergedValue === Game.WINNING_TILE) {
+          this._status = Game.Status.Win;
         }
-
-        mergedRow.push(mergedValue);
-        this.score += mergedValue;
 
         i++;
       } else {
-        mergedRow.push(slidRow[i]);
+        merged.push(slid[i]);
       }
     }
 
-    while (mergedRow.length < 4) {
-      mergedRow.push(0);
+    while (merged.length < this.size) {
+      merged.push(0);
     }
 
-    return mergedRow;
+    return merged;
   }
 
   _transposeBoard() {
-    const newBoard = [
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-    ];
+    const newBoard = this._createEmptyBoard();
 
-    for (let i = 0; i < newBoard.length; i++) {
-      for (let j = 0; j < newBoard[i].length; j++) {
-        newBoard[j][i] = this.board[i][j];
+    for (let i = 0; i < this.size; i++) {
+      for (let j = 0; j < this.size; j++) {
+        newBoard[j][i] = this._board[i][j];
       }
     }
 
@@ -101,76 +105,60 @@ export default class Game {
   }
 
   _checkForGameOver() {
-    for (let i = 0; i < 4; i++) {
-      for (let j = 0; j < 4; j++) {
-        if (this.board[i][j] === 0) {
+    for (let i = 0; i < this.size; i++) {
+      for (let j = 0; j < this.size; j++) {
+        if (this._board[i][j] === 0) {
           return;
         }
 
-        if (i < 3 && this.board[i][j] === this.board[i + 1][j]) {
+        if (j < this.size - 1 && this._board[i][j] === this._board[i][j + 1]) {
           return;
         }
 
-        if (j < 3 && this.board[i][j] === this.board[i][j + 1]) {
+        if (i < this.size - 1 && this._board[i][j] === this._board[i + 1][j]) {
           return;
         }
       }
     }
-    this.status = 'game over';
-  }
-
-  _handleMove(logic) {
-    if (this.status !== 'playing') {
-      return;
-    }
-
-    const oldBoard = JSON.stringify(this.board);
-
-    logic();
-
-    const newBoard = JSON.stringify(this.board);
-
-    if (oldBoard !== newBoard) {
-      this.__spawnNewTile();
-      this._checkForGameOver();
-    }
+    this._status = Game.Status.GameOver;
   }
 
   move(direction) {
-    if (this.status === 'game over') {
+    if (this.status === Game.Status.GameOver) {
       return false;
     }
 
-    const oldBoard = JSON.stringify(this.board);
+    const oldBoard = JSON.stringify(this._board);
 
     switch (direction) {
-      case 'Up':
-        this.board = this._transposeBoard();
-        this.board = this.board.map((row) => this._processRow(row));
-        this.board = this._transposeBoard();
+      case Game.Direction.Up:
+        this._board = this._transposeBoard();
+        this._board = this._board.map((row) => this._processRow(row));
+        this._board = this._transposeBoard();
         break;
-      case 'Down':
-        this.board = this._transposeBoard();
+      case Game.Direction.Down:
+        this._board = this._transposeBoard();
 
-        this.board = this.board.map((row) => {
+        this._board = this._board.map((row) => {
           return this._processRow([...row].reverse()).reverse();
         });
 
-        this.board = this._transposeBoard();
+        this._board = this._transposeBoard();
         break;
-      case 'Left':
-        this.board = this.board.map((row) => this._processRow(row));
+      case Game.Direction.Left:
+        this._board = this._board.map((row) => this._processRow(row));
         break;
-      case 'Right':
-        this.board = this.board.map((row) => {
+      case Game.Direction.Right:
+        this._board = this._board.map((row) => {
           return this._processRow([...row].reverse()).reverse();
         });
         break;
     }
 
-    const moved = JSON.stringify(this.board) !== oldBoard;
+    const moved = JSON.stringify(this._board) !== oldBoard;
 
     if (moved) {
+      this._moves++;
       this._spawnNewTile();
       this._checkForGameOver();
     }
@@ -178,62 +166,22 @@ export default class Game {
     return moved;
   }
 
-  /**
-   * @returns {number}
-   */
-  getScore() {
-    return this.score;
-  }
-
-  /**
-   * @returns {number[][]}
-   */
-  getState() {
-    return this.board;
-  }
-
-  /**
-   * Returns the current game status.
-   *
-   * @returns {string} One of: 'idle', 'playing', 'win', 'lose'
-   *
-   * `idle` - the game has not started yet (the initial state);
-   * `playing` - the game is in progress;
-   * `win` - the game is won;
-   * `lose` - the game is lost
-   */
-  getStatus() {
-    return this.status;
-  }
-
-  /**
-   * Starts the game.
-   */
   start() {
     this.restart();
   }
 
-  /**
-   * Resets the game.
-   */
   restart() {
-    this.score = 0;
-    this.status = 'playing';
-
-    this.board = [
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-    ];
-
+    this._score = 0;
+    this._moves = 0;
+    this._status = Game.Status.Playing;
+    this._board = this._createEmptyBoard();
     this._spawnNewTile();
     this._spawnNewTile();
   }
 
   continuePlaying() {
-    if (this.status === 'win') {
-      this.status = 'playing';
+    if (this.status === Game.Status.Win) {
+      this._status = Game.Status.Playing;
     }
   }
 }
